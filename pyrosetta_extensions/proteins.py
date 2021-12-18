@@ -1,12 +1,11 @@
-#Python
-from typing import Union
-from Bio.PDB import PDBList
-from pyrosetta import *
-from pyrosetta.rosetta import *
 from pathlib import Path
-from pyrosetta.rosetta.core.pose import Pose, PDBInfo
+from typing import Union
+from collections import OrderedDict
+
+from Bio.PDB import PDBList
 from functional import seq
-from pyrosetta.rosetta.protocols import antibody
+from pyrosetta import *
+from pyrosetta.rosetta.core.pose import Pose, PDBInfo
 
 
 class Protein:
@@ -31,6 +30,13 @@ class Protein:
         return seq(self.pose.residues)
 
     @property
+    def protein_residues(self) -> seq:
+        return self.residues.filter(lambda r:  r.is_protein())
+
+    def residue(self, num: int) -> pyrosetta.rosetta.core.conformation.Residue:
+        return self.pose.residue(num)
+
+    @property
     def first(self) -> pyrosetta.rosetta.core.conformation.Residue:
         return self.residues[0]
 
@@ -42,92 +48,38 @@ class Protein:
     def conformation(self) -> pyrosetta.rosetta.core.conformation.Conformation:
         return self.pose.conformation()
 
+    def pdb_range(self, start: int, end: int) -> seq:
+        return seq([self.info.pose2pdb(i) for i in range(start, end)])
 
-class Antibody(Protein):
-
-    def __init__(self, path: Union[str, Path, Pose], numbering = antibody.Chothia, folder_to_download="/tmp"):
-        Protein.__init__(self, path, folder_to_download)
-        self.antibody_info: antibody.AntibodyInfo = antibody.AntibodyInfo(self.pose, antibody.AHO_Scheme, numbering)
-
-    @property
-    def antibody_sequence(self) -> str:
-        return self.antibody_info.get_antibody_sequence()
+    def with_deleted_residues(self, start: int, end: int):
+        novel_pose = self.pose.clone()
+        novel_pose.delete_residue_range_slow(start, end)
+        return Protein(novel_pose)
 
     @property
-    def numbering_schema(self) -> str:
-        return  self.antibody_info.get_current_AntibodyNumberingScheme()
-
-    @property
-    def something(self):
-        self.antibody_info.get_AntibodyFrameworkInfo()
-
-    @property
-    def antibody_chain_names(self) -> str:
-        return self.antibody_info.get_antibody_chain_string()
-
-    @property
-    def start_H1(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.H1, self.pose)
-
-    @property
-    def start_H2(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.H2, self.pose)
-
-    @property
-    def start_H3(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.H3, self.pose)
-
-    @property
-    def start_H4(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.H4, self.pose)
-
-    @property
-    def sequence_H1(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.H1, self.pose)
-
-    @property
-    def sequence_H2(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.H2, self.pose)
-
-    @property
-    def sequence_H3(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.H3, self.pose)
+    def annotated_sequence(self) -> str:
+        return self.pose.annotated_sequence()
 
 
     @property
-    def sequence_H4(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.H4, self.pose)
-
-
-    @property
-    def start_L1(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.L1, self.pose)
+    def sequence(self) -> str:
+        return self.pose.sequence()
 
     @property
-    def start_L2(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.L2, self.pose)
+    def by_chain(self) -> OrderedDict:
+        from collections import OrderedDict
+        proteins = seq(self.pose.clone().split_by_chain()).map(lambda p: Protein(p))
+        dic = OrderedDict()
+        for p in proteins:
+            letter = p.info.pose2pdb(1).split(" ")[1]
+            dic[letter] = p
+        return dic
 
     @property
-    def start_L3(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.L3, self.pose)
-
-    @property
-    def start_L4(self):
-        return self.antibody_info.get_CDR_start(antibody.CDRNameEnum.L4, self.pose)
-
-    @property
-    def sequence_L1(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.L1, self.pose)
-
-    @property
-    def sequence_L2(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.L2, self.pose)
-
-    @property
-    def sequence_L3(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.L3, self.pose)
-
-    @property
-    def sequence_L4(self):
-        return self.antibody_info.get_CDR_sequence_with_stem(antibody.CDRNameEnum.L4, self.pose)
-
+    def by_chain_sequences(self) -> OrderedDict:
+        proteins = seq(self.pose.clone().split_by_chain()).map(lambda p: Protein(p))
+        dic = OrderedDict()
+        for p in proteins:
+            letter = p.info.pose2pdb(1).split(" ")[1]
+            dic[letter] = p.sequence
+        return dic

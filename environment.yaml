@@ -1,0 +1,17 @@
+name: pyrosetta_extensions
+channels:
+  - defaults
+  - conda-forge
+  - antonkulaga
+  - bioconda
+dependencies:
+  - python=3.8
+  - jupyterlab=3.2.4
+  - more-itertools=8.11.0
+  - pdbfixer
+  - click
+  - vmd-python
+  - biopython
+  - pip:
+      - pyfunctional
+      - tdqm

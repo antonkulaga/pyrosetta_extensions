@@ -7,13 +7,13 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = '0.0.1'
-DESCRIPTION = 'Python utilities'
-LONG_DESCRIPTION = 'A package with python helper functions to make your life more comfortable'
+VERSION = '0.0.2'
+DESCRIPTION = 'Pyroseta extensions'
+LONG_DESCRIPTION = 'A package with helper functions for pyrosetta'
 
 # Setting up
 setup(
-    name="pycomfort",
+    name="pyrosetta_extensions",
     version=VERSION,
     author="antonkulaga (Anton Kualga)",
     author_email="<antonkulaga@gmail.com>",
@@ -21,13 +21,11 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=['pyfunctional', 'more-itertools'],
-    keywords=['python', 'utils', 'files'],
+    install_requires=['pycomfort'],
+    keywords=['python', 'utils', 'files', "pyrosetta_extensions"],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         "Operating System :: Unix",
